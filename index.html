@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ivana's Bazi Chart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@400;500&family=Noto+Serif+SC:wght@400;600;900&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a deck of gold-foil cards laid on a night sky. Pillars are tarot cards, readings are arched talismans, the luck cycles trace an arc like a moon calendar. Single-theme by design. */
+:root{
+  --ink:#09090a;
+  --card:#0f0f10;
+  --gold:#d8b77c;
+  --gold-hi:#f0d9a6;
+  --gold-dim:#7d6747;
+  --rule:rgba(216,183,124,.42);
+  --cream:#ece2cc;
+  --mist:#a39479;
+  --display:"Cormorant Garamond", Garamond, "Times New Roman", serif;
+  --body:"EB Garamond", Garamond, Georgia, serif;
+  --label:"Jost", "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
+  --han:"Noto Serif SC", "Songti SC", "STSong", serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--cream);font-family:var(--body);font-size:19px;line-height:1.62;-webkit-font-smoothing:antialiased;position:relative}
+#dust{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.page{position:relative;z-index:1}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0;line-height:1.1}
+p{margin:0 0 1em}
+em{font-style:italic;color:var(--gold-hi)}
+.han{font-family:var(--han)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+.prose{max-width:640px}
+.cap{font-family:var(--label);font-size:11.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
+.ln{fill:none;stroke:var(--gold);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.lnf{fill:var(--gold)}
+
+/* HERO */
+.hero{padding:72px 0 40px;text-align:center}
+.hero .num{font-family:var(--display);font-size:20px;color:var(--gold);letter-spacing:.2em}
+.hero-art{width:min(420px,88vw);height:auto;display:block;margin:10px auto 0}
+.hero h1{font-size:clamp(52px,8vw,92px);font-style:italic;color:var(--gold-hi);margin-top:6px}
+.hero .sub{font-family:var(--display);font-size:clamp(20px,2.5vw,26px);font-style:italic;color:var(--mist);margin:8px auto 0;max-width:560px}
+.hero .meta{margin-top:28px;display:flex;justify-content:center;gap:28px;flex-wrap:wrap}
+.hero .meta div{font-family:var(--label);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.hero .meta div span{display:block;font-family:var(--body);letter-spacing:.02em;text-transform:none;font-size:16px;color:var(--cream);margin-top:4px}
+.hero .dedic{margin-top:26px;font-style:italic;color:var(--mist);font-size:17px}
+
+/* SECTIONS */
+section{padding:84px 0}
+.divider{display:block;margin:0 auto;width:220px;height:24px}
+.sec-head{text-align:center;margin-bottom:40px}
+.sec-head .han{display:block;font-size:15px;letter-spacing:.5em;color:var(--gold);margin-bottom:12px;padding-left:.5em}
+.sec-head h2{font-size:clamp(36px,5vw,56px);font-style:italic;color:var(--gold-hi)}
+.sec-head p{margin:16px auto 0;max-width:620px;color:var(--cream)}
+
+/* TAROT CARDS */
+.deck{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.tarot{position:relative;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:34px 16px 0;display:flex;flex-direction:column;align-items:center;text-align:center;min-height:560px}
+.tarot::before{content:"";position:absolute;inset:7px;border:1px solid rgba(216,183,124,.22);border-radius:6px;pointer-events:none}
+.tarot .tab{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--ink);border:1px solid var(--rule);border-top:none;border-radius:0 0 12px 12px;padding:3px 14px 4px;font-family:var(--display);font-size:15px;color:var(--gold);letter-spacing:.12em}
+.tarot.dm{border-color:var(--gold)}
+.tarot.dm .tab{border-color:var(--gold);color:var(--gold-hi)}
+.tarot .role{font-family:var(--label);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--mist);margin-top:4px}
+.tarot .god{font-family:var(--display);font-style:italic;font-size:19px;color:var(--gold-hi);margin-top:6px}
+.tarot .god .han{font-style:normal;font-size:13px;color:var(--mist);margin-left:4px}
+.tarot .emb{width:110px;height:110px;margin:12px 0 2px}
+.tarot .gly{font-family:var(--han);font-weight:900;font-size:58px;line-height:1;color:var(--gold-hi)}
+.tarot .gly.b{margin-top:14px;font-weight:600;color:var(--gold)}
+.tarot .el{font-family:var(--label);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-top:6px}
+.tarot .hid{margin-top:14px;font-size:14.5px;color:var(--mist);line-height:1.5}
+.tarot .hid .han{color:var(--gold);margin-right:4px}
+.tarot .foot{margin-top:auto;width:calc(100% + 32px);border-top:1px solid var(--rule);padding:12px 8px 14px;font-family:var(--label);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold)}
+.tarot .foot i{display:block;font-family:var(--display);font-style:italic;text-transform:none;letter-spacing:.02em;font-size:15px;color:var(--mist);margin-top:3px}
+.stars-note{text-align:center;margin:36px auto 0;max-width:680px;color:var(--mist);font-style:italic}
+
+/* DAY MASTER */
+.dm-grid{display:grid;grid-template-columns:340px 1fr;gap:64px;align-items:center}
+.pill{position:relative;border:1px solid var(--rule);border-radius:999px;background:var(--card);display:flex;flex-direction:column;align-items:center;text-align:center}
+.pill-big{padding:56px 30px 60px}
+.pill-big svg{width:100%;height:auto}
+.lede{font-family:var(--display);font-style:italic;font-size:clamp(23px,2.6vw,28px);line-height:1.42;color:var(--gold-hi);margin-bottom:24px}
+
+/* ELEMENTS */
+.el-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+#orbit{width:100%;max-width:470px;height:auto;display:block;margin:0 auto}
+.bars{display:grid;gap:18px;margin-top:8px}
+.bar{display:grid;grid-template-columns:110px 1fr 44px;gap:14px;align-items:center}
+.bar .nm{font-family:var(--label);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.bar .nm .han{letter-spacing:0;margin-left:6px;color:var(--mist)}
+.bar .tr{position:relative;height:9px}
+.bar .tr::before{content:"";position:absolute;left:0;right:0;top:4px;border-top:1px dotted var(--gold-dim)}
+.bar .fi{position:absolute;left:0;top:3px;height:3px;background:var(--gold);border-radius:2px}
+.bar .fi::after{content:"";position:absolute;right:-4px;top:-3px;width:9px;height:9px;border-radius:50%;background:var(--gold-hi)}
+.bar .v{font-family:var(--label);font-size:13px;color:var(--cream);text-align:right;font-variant-numeric:tabular-nums}
+.small{font-size:15.5px;color:var(--mist);margin-top:18px}
+.roles{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.role-chip{border:1px solid var(--rule);border-radius:999px;padding:5px 14px;font-family:var(--label);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mist)}
+.role-chip b{font-weight:500;color:var(--gold-hi)}
+.role-chip.fav{border-color:var(--gold);background:rgba(216,183,124,.08)}
+
+/* TALISMANS */
+.talismans{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.tal{padding:44px 30px 46px;border-radius:200px;justify-content:flex-start}
+.tal svg{width:120px;height:120px;margin-bottom:10px}
+.tal .k{font-family:var(--han);font-size:14px;letter-spacing:.3em;color:var(--mist);margin-bottom:6px;padding-left:.3em}
+.tal h3{font-size:30px;font-style:italic;color:var(--gold-hi);margin-bottom:14px}
+.tal p{font-size:17px;text-align:left}
+.tal .src{margin-top:auto;padding-top:10px;font-family:var(--label);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-dim)}
+.long{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.long .tarot{min-height:0;padding:40px 36px 0;text-align:left;align-items:stretch}
+.long .tarot h3{font-size:30px;font-style:italic;color:var(--gold-hi);text-align:center;margin-bottom:6px}
+.long .tarot .k{font-family:var(--han);text-align:center;letter-spacing:.3em;color:var(--mist);font-size:14px;margin-bottom:16px}
+.long .tarot p{font-size:17px}
+.long .tarot .foot{width:calc(100% + 72px);margin-left:-36px;text-align:center}
+
+/* LUCK ARC */
+.arc-box{overflow-x:auto}
+#arc{display:block;width:100%;min-width:640px;height:auto}
+.luck-read{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:20px}
+.luck-read h3{font-size:30px;font-style:italic;color:var(--gold-hi);margin-bottom:10px}
+.luck-read h3 .han{font-style:normal;font-size:22px;color:var(--gold);margin-left:6px}
+
+/* YEARS */
+.years{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.years .tarot{min-height:0;padding-bottom:0}
+.years .yr{font-family:var(--display);font-size:44px;color:var(--gold-hi);line-height:1;margin-top:8px}
+.years .yg{font-family:var(--han);font-size:22px;color:var(--gold);margin-top:6px;letter-spacing:.2em;padding-left:.2em}
+.years .emb{width:90px;height:90px;margin:10px 0}
+.years p{font-size:16.5px;text-align:left;padding:0 10px}
+
+/* RITUALS */
+.rituals{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.rit{padding:40px 22px 44px;border-radius:200px}
+.rit svg{width:96px;height:96px;margin-bottom:8px}
+.rit h3{font-family:var(--label);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.rit p{font-size:16.5px;margin:0}
+.sw{display:flex;gap:8px;justify-content:center;margin:4px 0 14px}
+.sw span{width:22px;height:22px;border-radius:50%;border:1px solid var(--rule)}
+
+/* VERSE */
+.verse{text-align:center;padding:72px 0 40px}
+.verse .zh{font-family:var(--han);font-size:clamp(18px,2.3vw,23px);line-height:2.1;color:var(--gold-hi);letter-spacing:.12em}
+.verse .en{font-family:var(--display);font-style:italic;font-size:clamp(21px,2.4vw,26px);color:var(--cream);margin-top:14px}
+footer{padding:28px 0 72px;text-align:center;color:var(--mist);font-size:14.5px}
+footer p{max-width:640px;margin:0 auto .6em}
+
+a:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
+
+@media (max-width:960px){
+  .deck{grid-template-columns:repeat(2,1fr)}
+  .talismans{grid-template-columns:1fr 1fr}
+  .rituals{grid-template-columns:repeat(2,1fr)}
+  .dm-grid,.el-grid,.luck-read,.long{grid-template-columns:1fr}
+  .dm-grid .pill-big{max-width:340px;margin:0 auto}
+  .years{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  body{font-size:18px}
+  .wrap{padding:0 18px}
+  section{padding:60px 0}
+  .deck{grid-template-columns:1fr 1fr;gap:12px}
+  .tarot{min-height:500px;padding-left:10px;padding-right:10px}
+  .tarot .foot{width:calc(100% + 20px)}
+  .tarot .gly{font-size:46px}
+  .tarot .emb{width:84px;height:84px}
+  .talismans,.rituals{grid-template-columns:1fr}
+  .tal{border-radius:160px}
+  .bar{grid-template-columns:96px 1fr 40px}
+}
+
+/* ABUNDANCE */
+.ab-intro{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;margin-bottom:56px}
+.ab-intro .lede{margin-bottom:0}
+.channels{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:64px}
+.ledger{border-top:1px solid var(--rule)}
+.lrow{display:grid;grid-template-columns:90px 70px 128px 1fr;gap:22px;align-items:baseline;padding:22px 4px;border-bottom:1px solid var(--rule)}
+.lrow .y{font-family:var(--display);font-size:32px;color:var(--gold-hi);line-height:1;font-variant-numeric:tabular-nums}
+.lrow .g{font-family:var(--han);font-size:20px;color:var(--gold);letter-spacing:.15em}
+.lrow .moons{display:flex;gap:6px;align-items:center}
+.lrow .moons i{width:14px;height:14px;border-radius:50%;border:1px solid var(--gold);display:block}
+.lrow .moons i.f{background:var(--gold)}
+.lrow .t b{display:block;font-family:var(--label);font-weight:400;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.lrow .t p{margin:0;font-size:17px}
+.lrow.peak{background:linear-gradient(90deg,rgba(216,183,124,.07),transparent)}
+.ledger-key{display:flex;gap:18px;justify-content:flex-end;margin-top:14px;font-family:var(--label);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mist)}
+.ab-keys{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:64px}
+.ab-keys .tarot{min-height:0;padding:40px 36px 0;text-align:left;align-items:stretch}
+.ab-keys .tarot h3{font-size:28px;font-style:italic;color:var(--gold-hi);text-align:center;margin-bottom:16px}
+.ab-keys .tarot ul{margin:0 0 22px;padding-left:18px;font-size:17px}
+.ab-keys .tarot li{margin-bottom:8px}
+.ab-keys .tarot li::marker{color:var(--gold)}
+.ab-keys .tarot .foot{width:calc(100% + 72px);margin-left:-36px;text-align:center}
+@media (max-width:960px){.ab-intro,.ab-keys{grid-template-columns:1fr}.channels{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.channels{grid-template-columns:1fr}.lrow{grid-template-columns:1fr 1fr;gap:8px 14px}.lrow .t{grid-column:1/-1}}
+
+/* 2027 MONTHS */
+.months{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.months .tarot{min-height:0;padding:34px 18px 0;align-items:stretch;text-align:left}
+.mhead{display:flex;justify-content:space-between;align-items:baseline}
+.mname{font-family:var(--display);font-size:26px;font-style:italic;color:var(--gold-hi);line-height:1}
+.mgz{font-family:var(--han);font-size:19px;color:var(--gold);letter-spacing:.1em}
+.mdates{font-family:var(--label);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mist);margin:6px 0 10px}
+.months .moons{display:flex;gap:5px;margin-bottom:10px}
+.months .moons i{width:11px;height:11px;border-radius:50%;border:1px solid var(--gold);display:block}
+.months .moons i.f{background:var(--gold)}
+.mtheme{font-family:var(--display);font-size:20px;color:var(--cream);margin-bottom:6px;line-height:1.2}
+.months p{font-size:15.5px;line-height:1.55;margin:0 0 14px}
+.months .tarot.peak{border-color:var(--gold)}
+.months .foot{width:calc(100% + 36px);margin-left:-18px;text-align:center;font-size:10px;letter-spacing:.18em;padding:10px 8px 12px}
+/* NATAL */
+.natal-top{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;margin-bottom:56px}
+#wheel{width:100%;max-width:520px;height:auto;display:block;margin:0 auto}
+.big3{display:grid;gap:16px}
+.big3 .tarot{min-height:0;padding:24px 26px 18px;align-items:stretch;text-align:left}
+.big3 .b3h{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.big3 .gl{font-size:24px;color:var(--gold);font-family:"DejaVu Sans","Segoe UI Symbol","Apple Symbols",serif;width:28px}
+.big3 h3{font-size:26px;font-style:italic;color:var(--gold-hi)}
+.big3 .deg{margin-left:auto;font-family:var(--label);font-size:11px;letter-spacing:.2em;color:var(--mist)}
+.big3 p{font-size:16.5px;margin:0}
+.ptable{width:100%;border-collapse:collapse;margin-top:48px;font-variant-numeric:tabular-nums}
+.ptable th{font-family:var(--label);font-weight:400;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule)}
+.ptable td{padding:10px 12px;border-bottom:1px solid rgba(216,183,124,.18);font-size:16.5px}
+.ptable td.g{font-family:"DejaVu Sans","Segoe UI Symbol","Apple Symbols",serif;color:var(--gold);width:40px}
+.ptable td.m{color:var(--mist);font-style:italic}
+.ptable-box{overflow-x:auto}
+@media (max-width:960px){.months{grid-template-columns:repeat(2,1fr)}.natal-top{grid-template-columns:1fr}}
+@media (max-width:560px){.months{grid-template-columns:1fr}}
+
+/* FRIENDSHIP */
+.duo{display:grid;grid-template-columns:1fr auto 1fr;gap:28px;align-items:center;margin-bottom:56px}
+.duo .who{text-align:center}
+.duo .who .nm{font-family:var(--display);font-style:italic;font-size:40px;color:var(--gold-hi);line-height:1}
+.duo .who .dm{font-family:var(--han);font-weight:900;font-size:64px;color:var(--gold-hi);line-height:1.1;margin:10px 0 2px}
+.duo .who .cap{display:block}
+.duo .who .row{display:flex;justify-content:center;gap:10px;margin-top:14px;font-family:var(--han);font-size:19px;color:var(--gold);letter-spacing:.05em}
+.duo .who .row span{display:flex;flex-direction:column;align-items:center;gap:2px}
+.duo .who .row small{font-family:var(--label);font-size:9px;letter-spacing:.2em;color:var(--mist);text-transform:uppercase}
+.forge{width:200px;height:auto}
+.fs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+.fs-grid .tarot{min-height:0;padding:40px 34px 0;text-align:left;align-items:stretch}
+.fs-grid .tarot h3{font-size:28px;font-style:italic;color:var(--gold-hi);text-align:center;margin-bottom:6px}
+.fs-grid .tarot .k{font-family:var(--han);text-align:center;letter-spacing:.3em;color:var(--mist);font-size:14px;margin-bottom:16px}
+.fs-grid .tarot p{font-size:17px}
+.fs-grid .tarot .foot{width:calc(100% + 68px);margin-left:-34px;text-align:center}
+.fs-grid .wide{grid-column:1/-1}
+.fs-grid .wide p{max-width:820px;margin-left:auto;margin-right:auto}
+@media (max-width:960px){.duo{grid-template-columns:1fr}.forge{margin:0 auto;display:block}.fs-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<canvas id="dust" aria-hidden="true"></canvas>
+<div class="page">
+
+<!-- reusable line emblems -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="star4" viewBox="-10 -10 20 20"><path d="M0-10C1-2 2-1 10 0 2 1 1 2 0 10-1 2-2 1-10 0-2-1-1-2 0-10z" fill="#d8b77c"/></symbol>
+    <symbol id="e-fire" viewBox="0 0 100 100">
+      <g class="ln"><circle cx="50" cy="56" r="22" stroke-dasharray="1 3.2"/>
+      <path d="M50 26c8 13 14 22 13 31-1 8-6 12-13 12s-12-4-13-12c-1-9 5-18 13-31z"/>
+      <path d="M50 46c4 7 6 11 5 15s-3 6-5 6-4-2-5-6 1-8 5-15z"/>
+      <path d="M50 4v12M50 84v12M14 56H4M96 56H86M24 30l-6-6M76 30l6-6M24 82l-6 6M76 82l6 6"/></g>
+    </symbol>
+    <symbol id="e-water" viewBox="0 0 100 100">
+      <g class="ln"><path d="M62 12a30 30 0 1 0 0 52 26 26 0 1 1 0-52z"/>
+      <path d="M8 76c7-5 14 5 21 0s14 5 21 0 14 5 21 0 14 5 21 0"/>
+      <path d="M14 86c7-5 14 5 21 0s14 5 21 0 14 5 21 0 7 3 9 1"/>
+      <path d="M22 95c7-4 14 4 21 0s14 4 21 0 14 4 18 1"/></g>
+      <use href="#star4" x="70" y="18" width="10" height="10"/><circle cx="78" cy="42" r="1.2" class="lnf"/>
+    </symbol>
+    <symbol id="e-metal" viewBox="0 0 100 100">
+      <g class="ln"><path d="M50 8L72 38 50 92 28 38z"/><path d="M28 38h44M50 8l-9 30 9 54 9-54z"/>
+      <path d="M50 2v4M86 30l-6 3M14 30l6 3"/></g>
+      <use href="#star4" x="76" y="56" width="12" height="12"/><use href="#star4" x="14" y="64" width="8" height="8"/>
+    </symbol>
+    <symbol id="e-earth" viewBox="0 0 100 100">
+      <g class="ln"><path d="M6 80L36 34l14 18 14-26 30 54z"/><path d="M36 34l-6 20 8 10M64 26l-4 22 10 14"/>
+      <path d="M2 86h96M14 92h72"/><circle cx="78" cy="18" r="7"/></g>
+      <circle cx="78" cy="18" r="2" class="lnf"/>
+    </symbol>
+    <symbol id="e-wood" viewBox="0 0 100 100">
+      <g class="ln"><path d="M50 96V20"/><path d="M50 70c-14 0-24-8-26-20 14 0 24 8 26 20zM50 52c14 0 24-8 26-20-14 0-24 8-26 20zM50 34c-9-2-14-9-14-18 9 2 14 9 14 18z"/>
+      <path d="M38 96h24"/></g>
+      <use href="#star4" x="66" y="8" width="12" height="12"/><circle cx="22" cy="28" r="1.2" class="lnf"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="num">丁</div>
+    <svg class="hero-art" id="heroArt" viewBox="-200 -230 400 470" role="img" aria-label="A gold line drawing of a candle flame cradled in a crescent moon above the sea">
+      <g class="ln">
+        <path d="M0-224v26" stroke-dasharray="2 4"/>
+        <path d="M-10-214l10 8 10-8M0-206v-8"/>
+        <circle cx="0" cy="-178" r="10" class="lnf" style="fill:#d8b77c"/>
+        <path d="M-40-150a40 40 0 0 1 80 0" stroke-dasharray="0.5 5" stroke-width="2"/>
+        <circle cx="0" cy="-140" r="20"/>
+        <path d="M-58-140h-8M58-140h8"/><path d="M-74-148a10 10 0 0 0 0 16M74-148a10 10 0 0 1 0 16"/>
+        <path d="M0-120v24" stroke-dasharray="2 4"/>
+      </g>
+      <g id="crescentHatch"></g>
+      <g class="ln">
+        <path id="crescentPath" d="M-30-92A100 100 0 1 0 98 30 84 84 0 1 1 -30 -92z"/>
+        <path d="M-30-92l-2 30M-34-58l-4 8 4 8 4-8z" stroke-width=".9"/>
+        <path d="M-70-62l0 54M-74 -4l4 10 4-10-4-4z" stroke-width=".9"/>
+      </g>
+      <g class="ln" stroke-width="1.2">
+        <path d="M20 -36c18 28 30 46 28 66-2 16-14 24-28 24s-26-8-28-24c-2-20 10-38 28-66z"/>
+        <path d="M20 6c9 14 13 22 12 31s-6 13-12 13-11-4-12-13 3-17 12-31z"/>
+      </g>
+      <g id="flameRays" class="ln"></g>
+      <g class="ln">
+        <path d="M20 60v26" stroke-dasharray="2 4"/>
+        <circle cx="20" cy="104" r="14"/><path d="M6 104a14 14 0 0 0 28 0" />
+        <path d="M-150 160c25-12 50 12 75 0s50 12 75 0 50 12 75 0 50 12 75 0"/>
+        <path d="M-130 180c25-12 50 12 75 0s50 12 75 0 50 12 75 0 40 8 55 2"/>
+        <path d="M-100 200c25-12 50 12 75 0s50 12 75 0 40 10 50 4"/>
+        <path d="M-60 220c25-10 50 10 75 0s30 8 45 4"/>
+      </g>
+      <circle cx="20" cy="104" r="5" class="lnf" style="fill:#d8b77c"/>
+      <use href="#star4" x="-180" y="-120" width="16" height="16"/><use href="#star4" x="150" y="-170" width="12" height="12"/>
+      <use href="#star4" x="140" y="90" width="14" height="14"/><use href="#star4" x="-160" y="60" width="9" height="9"/>
+    </svg>
+    <h1>Ivana</h1>
+    <div class="sub">The lamp over winter water. A Four Pillars reading of the hour she arrived and the long light she carries.</div>
+    <div class="meta">
+      <div>Born<span>12 November 1993</span></div>
+      <div>Hour<span>7:10 pm · solar 7:47 pm</span></div>
+      <div>Place<span>Zrenjanin, Serbia</span></div>
+    </div>
+    <div class="dedic">With love, from Jane, for a birthday just passed</div>
+  </div>
+</header>
+
+<main>
+
+<section id="pillars">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">四柱八字</span><h2>The Four Pillars</h2><p>Eight characters, read right to left from ancestry toward legacy. The Day card is Ivana herself.</p></div>
+    <div class="deck">
+
+      <article class="tarot">
+        <div class="tab">IV</div>
+        <div class="role">Hour · legacy &amp; later life</div>
+        <div class="god">Direct Wealth <span class="han">正财</span></div>
+        <svg class="emb"><use href="#e-metal"/></svg>
+        <div class="gly">庚</div><div class="el">Yang Metal</div>
+        <div class="gly b">戌</div><div class="el">Dog · Earth</div>
+        <div class="hid"><span class="han">戊</span>Hurting Officer<br><span class="han">辛</span>Indirect Wealth<br><span class="han">丁</span>Friend</div>
+        <div class="foot">The Hour<i>Hairpin Gold · 钗钏金</i></div>
+      </article>
+
+      <article class="tarot dm">
+        <div class="tab">III</div>
+        <div class="role">Day · self &amp; heart</div>
+        <div class="god">Day Master <span class="han">日主</span></div>
+        <svg class="emb"><use href="#e-fire"/></svg>
+        <div class="gly">丁</div><div class="el">Yin Fire</div>
+        <div class="gly b">酉</div><div class="el">Rooster · Metal</div>
+        <div class="hid"><span class="han">辛</span>Indirect Wealth<br>Nobleman · Literary Star</div>
+        <div class="foot">The Day<i>Mountain-Foot Fire · 山下火</i></div>
+      </article>
+
+      <article class="tarot">
+        <div class="tab">II</div>
+        <div class="role">Month · career &amp; season</div>
+        <div class="god">Seven Killings <span class="han">七杀</span></div>
+        <svg class="emb"><use href="#e-water"/></svg>
+        <div class="gly">癸</div><div class="el">Yin Water</div>
+        <div class="gly b">亥</div><div class="el">Pig · Water</div>
+        <div class="hid"><span class="han">壬</span>Direct Officer<br><span class="han">甲</span>Direct Resource<br>Nobleman</div>
+        <div class="foot">The Month<i>Great Sea Water · 大海水</i></div>
+      </article>
+
+      <article class="tarot">
+        <div class="tab">I</div>
+        <div class="role">Year · roots &amp; family</div>
+        <div class="god">Seven Killings <span class="han">七杀</span></div>
+        <svg class="emb"><use href="#e-water"/></svg>
+        <div class="gly">癸</div><div class="el">Yin Water</div>
+        <div class="gly b">酉</div><div class="el">Rooster · Metal</div>
+        <div class="hid"><span class="han">辛</span>Indirect Wealth<br>Nobleman · Literary Star</div>
+        <div class="foot">The Year<i>Sword-Edge Gold · 剑锋金</i></div>
+      </article>
+
+    </div>
+    <p class="stars-note">Three branches carry the Heavenly Nobleman <span class="han">天乙贵人</span> and both Roosters carry the Literary Star <span class="han">文昌</span>, two signatures that shape much of what follows.</p>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="day-master">
+  <div class="wrap dm-grid">
+    <div class="pill pill-big">
+      <div class="cap" style="margin-bottom:14px">The Day Master</div>
+      <svg viewBox="0 0 200 260" role="img" aria-label="A candle with its flame and rays">
+        <g class="ln">
+          <path d="M100 2v18" stroke-dasharray="2 4"/>
+          <path d="M100 40c18 30 30 50 28 70-2 18-14 28-28 28s-26-10-28-28c-2-20 10-40 28-70z"/>
+          <path d="M100 84c9 15 13 24 12 33s-6 14-12 14-11-5-12-14 3-18 12-33z"/>
+          <path d="M84 150h32v80H84z"/><path d="M84 160c6 4 10-2 14 4s4 12 8 10 4-10 10-8"/>
+          <path d="M100 138v12"/><path d="M60 236h80M72 246h56"/>
+        </g>
+        <g id="dmRays" class="ln"></g>
+        <use href="#star4" x="20" y="40" width="14" height="14"/><use href="#star4" x="166" y="70" width="10" height="10"/>
+      </svg>
+      <div class="han" style="font-size:54px;font-weight:900;color:var(--gold-hi);margin-top:10px">丁</div>
+      <div class="cap">Yin Fire · the Lamp</div>
+    </div>
+    <div class="prose">
+      <div class="sec-head" style="text-align:left;margin-bottom:22px"><span class="han" style="padding-left:0">日主</span><h2>The candle in winter</h2></div>
+      <p class="lede">Ivana is <span class="han">丁</span>, the smaller and more intimate of the two fires. The classics compare it to the lamp, the candle and the hearth, a flame that gathers people around it and lets them see one another.</p>
+      <p>Where the yang fire is the sun that shines on everyone alike, the yin fire is held, tended and carried from room to room. It is the light of culture in the old sense, the lamp by which stories were told and goods were weighed and friends were received. A <span class="han">丁</span> person tends to lead through warmth and attention rather than volume, and her influence travels farther than its quiet source suggests.</p>
+      <p>She was born in the Pig month, deep in early winter, with Water rising everywhere in her chart. A candle in a winter night is the most precious light there is, defined by the cold it holds its own against and valued most exactly where it is rarest.</p>
+      <p>Her day pillar <span class="han">丁酉</span> sets the flame upon a Rooster of refined metal, warming and revealing it. The Nayin names this <em>Fire at the Mountain's Foot</em>: the lantern glow of a settlement at dusk, seen from far off by travellers who know it means welcome.</p>
+    </div>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="elements">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">五行</span><h2>The Five Elements</h2></div>
+    <div class="el-grid">
+      <svg id="orbit" viewBox="-240 -240 480 480" role="img" aria-label="The five elements on the generating cycle, each sized by its strength in Ivana's chart: Water 62 percent, Metal 26, Wood 6, Fire 5, Earth 1. Wood and Fire are marked as favourable."></svg>
+      <div>
+        <p>The chart is a winter sea with silver in it. Water and Metal carry almost nine tenths of its weighted strength while the flame and the wood that would feed it are faint. Tradition calls such a Day Master <em>weak</em>, which carries no judgement: it describes a fire that thrives by being fed and draws its brilliance from what surrounds it.</p>
+        <div class="bars" role="img" aria-label="Weighted element strength: Water 62 percent, Metal 26, Wood 6, Fire 5, Earth 1">
+          <div class="bar"><span class="nm">Water<span class="han">水</span></span><span class="tr"><span class="fi" style="width:62%"></span></span><span class="v">62%</span></div>
+          <div class="bar"><span class="nm">Metal<span class="han">金</span></span><span class="tr"><span class="fi" style="width:26%"></span></span><span class="v">26%</span></div>
+          <div class="bar"><span class="nm">Wood<span class="han">木</span></span><span class="tr"><span class="fi" style="width:6%"></span></span><span class="v">6%</span></div>
+          <div class="bar"><span class="nm">Fire<span class="han">火</span></span><span class="tr"><span class="fi" style="width:5%"></span></span><span class="v">5%</span></div>
+          <div class="bar"><span class="nm">Earth<span class="han">土</span></span><span class="tr"><span class="fi" style="width:1%"></span></span><span class="v">1%</span></div>
+        </div>
+        <p class="small">Seasonally weighted strength including hidden stems. By simple count: Water 3, Metal 3, Fire 1, Earth 1, Wood 0. Her single Wood lies hidden inside the Pig, a seed beneath the winter sea.</p>
+        <div class="roles">
+          <span class="role-chip fav">Primary ally · <b>Wood</b></span>
+          <span class="role-chip fav">Support · <b>Fire</b></span>
+          <span class="role-chip">Neutral · <b>Earth</b></span>
+          <span class="role-chip">Draining · <b>Water</b></span>
+          <span class="role-chip">Heavy · <b>Metal</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="reading">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">命解</span><h2>The Reading</h2></div>
+    <div class="talismans">
+
+      <article class="pill tal">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><g class="ln">
+          <path d="M60 6v108"/><path d="M60 22l14 10-14 10-14-10z"/><path d="M20 64c14-8 26 8 40 0s26 8 40 0"/><path d="M20 78c14-8 26 8 40 0s26 8 40 0"/>
+          <path d="M40 100l20-12 20 12"/></g><use href="#star4" x="84" y="12" width="14" height="14"/><use href="#star4" x="18" y="26" width="10" height="10"/></svg>
+        <div class="k">七杀</div>
+        <h3>Grace under pressure</h3>
+        <p>Two <em>Seven Killings</em> stars stand revealed in her year and month. This is the general's star, the star of pressure and command, and in most charts it arrives as a test. In Ivana's it arrives early and in pairs, so she has met weight since her first seasons and learned to move with it rather than buckle.</p>
+        <p>Deadlines, crowded service and sudden reversals sharpen her. What others read as composure is deep familiarity: pressure is a climate she was born into, and she long ago learned its weather.</p>
+        <div class="src">Year &amp; month stems · 癸 癸</div>
+      </article>
+
+      <article class="pill tal">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><g class="ln">
+          <path d="M14 60c18-26 74-26 92 0-18 26-74 26-92 0z"/><circle cx="60" cy="60" r="16"/>
+          <path d="M60 4v14M60 102v14M30 24l6 10M90 24l-6 10"/></g><use href="#star4" x="51" y="51" width="18" height="18"/></svg>
+        <div class="k">文昌 · 伤官</div>
+        <h3>The curator's eye</h3>
+        <p>Both Roosters carry the <em>Literary Star</em>, the sign of cultural intelligence and refinement. Hidden in her hour is the <em>Hurting Officer</em>, the star of taste and critique, which refuses the merely adequate and knows instantly when something is off by a degree.</p>
+        <p>Together they describe a curator by nature, someone who senses the meaning held in an object, a gathering or a cup and arranges things so others can feel it too. What her flame chooses to illuminate becomes culture.</p>
+        <div class="src">Branches 酉 酉 · hidden 戊</div>
+      </article>
+
+      <article class="pill tal">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><g class="ln">
+          <ellipse cx="60" cy="62" rx="24" ry="34" transform="rotate(-24 60 62)"/>
+          <path d="M48 32c14 14 10 46 24 60"/>
+          <path d="M60 4c4 6-4 10 0 16M46 8c4 6-4 10 0 16M74 8c4 6-4 10 0 16"/></g>
+          <use href="#star4" x="92" y="88" width="14" height="14"/><use href="#star4" x="14" y="80" width="10" height="10"/></svg>
+        <div class="k">偏财 · 正财</div>
+        <h3>The trader's instinct</h3>
+        <p>Two <em>Indirect Wealth</em> stars mark the entrepreneur who sees value before it is priced and thrives on deals made through relationship. <em>Direct Wealth</em> crowns her hour, the pillar of projects and later life, pointing to a venture that matures into steady and lasting income.</p>
+        <p>The image is almost literal. A coffee bean is a seed carried from far away, roasted by fire and poured into the hands of a crowd. For a winter flame, the roaster is a hearth and the café a lamp in the cold.</p>
+        <div class="src">Branches 酉 酉 · hour stem 庚</div>
+      </article>
+
+    </div>
+
+    <div class="long">
+      <article class="tarot">
+        <div class="tab">✦</div>
+        <h3>A chart full of benefactors</h3>
+        <div class="k">天乙贵人</div>
+        <p>For a <span class="han">丁</span> Day Master the Heavenly Nobleman lives in the Pig and the Rooster, and Ivana has three of them, an unusually generous number. This star brings helpful people at the right moment: mentors, patrons, regulars who become champions, strangers who open doors without being asked.</p>
+        <p>It rewards exactly what she already does well, which is to receive people warmly and remember them. Her community is part of her fortune, and the chart suggests it will keep showing up for her.</p>
+        <div class="foot">Branches 酉 · 亥 · 酉</div>
+      </article>
+      <article class="tarot">
+        <div class="tab">✦</div>
+        <h3>The alchemy she is learning</h3>
+        <div class="k">杀印相生</div>
+        <p>How does a small flame survive so much water and metal? Bazi answers with an old formula, <em>Seven Killings transformed by Resource</em>. When Wood appears it drinks the Water and becomes fuel for Fire, so the forces that once pressed on the flame begin to feed it. A single <span class="han">甲</span> Wood waits hidden in her month pillar.</p>
+        <p>In life this looks like learning, mentors, rest and beauty. Its shadow is a Rooster meeting a Rooster <span class="han">酉酉自刑</span>, a perfectionist's habit of carrying everything. Her flame burns brightest when tended as carefully as she tends everyone else's.</p>
+        <div class="foot">Favourable · Wood then Fire</div>
+      </article>
+    </div>
+    <div class="long" style="grid-template-columns:1fr">
+      <article class="tarot">
+        <div class="tab">♡</div>
+        <h3>The heart</h3>
+        <div class="k">夫宫</div>
+        <p style="max-width:760px;margin-left:auto;margin-right:auto">Her spouse palace holds the Rooster with its Indirect Wealth, an image of generosity, worldliness and shared pleasure. Strong officer stars suggest she is drawn to capable and serious people. Her chart is happiest with a partner who warms her rather than commands her, someone who brings Wood and Fire to the table: encouragement, growth, laughter and a fire she does not have to keep lit alone.</p>
+        <div class="foot">Day branch 酉 · officer stars 癸 癸 壬</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="luck">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">大运</span><h2>The Ten-Year Luck Pillars</h2><p>Each decade brings a new pillar into conversation with the natal chart. Ivana's run forward from her birth month and turn toward exactly what her chart needs most.</p></div>
+    <div class="arc-box"><svg id="arc" viewBox="0 0 1000 600" role="img" aria-label="Six ten-year luck pillars on an arc: age 8 甲子, 18 乙丑, 28 丙寅 (current, 2022 to 2031), 38 丁卯, 48 戊辰, 58 己巳"></svg></div>
+    <div class="luck-read">
+      <div>
+        <h3>The present decade<span class="han">丙寅</span></h3>
+        <p>She is in the best stretch her chart has yet seen. <span class="han">丙</span> is the sun beside her own candle, and <span class="han">寅</span> is the Tiger of early spring, carrying Wood, Fire and Earth within. The Tiger also embraces her month's Pig <span class="han">寅亥合</span> and draws its hidden Wood into the open. The seed beneath the winter sea is breaking the surface.</p>
+        <p>This is a decade of momentum, allies and visibility in which ventures founded now can take root. The sun brings peers and partners in abundance; the counsel is to choose collaborators who add fuel rather than share the flame.</p>
+      </div>
+      <div>
+        <h3>The decade after<span class="han">丁卯</span></h3>
+        <p>From her late thirties a second lamp arrives and the Rabbit brings pure Wood, the most direct nourishment her chart can receive. The Rabbit clashes with both Roosters <span class="han">卯酉冲</span>, so this decade also brings movement: renovation, expansion, perhaps a new city. These are the shakings of growth.</p>
+        <p>The classical bone-weight verse for her birth says her life's work comes fully into its own in the later half, and these pillars agree.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="years">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">流年</span><h2>The Years Ahead</h2></div>
+    <div class="years">
+      <article class="tarot">
+        <div class="tab">XXVI</div>
+        <div class="yr">2026</div><div class="yg">丙午</div>
+        <svg class="emb"><use href="#e-fire"/></svg>
+        <p>A blazing year for a winter flame. The Horse is her own root <span class="han">禄</span> and her Peach Blossom, so charisma, attention and new connections arrive easily. The sun beside her brings partners and rivals alike: generous with collaboration, careful with shared money.</p>
+        <div class="foot">Fire Horse<i>visibility</i></div>
+      </article>
+      <article class="tarot">
+        <div class="tab">XXVII</div>
+        <div class="yr">2027</div><div class="yg">丁未</div>
+        <svg class="emb"><use href="#e-wood"/></svg>
+        <p>A kindred flame on warm earth. The Goat joins her Pig in a half Wood alliance <span class="han">亥未半合</span>, quietly turning pressure into support. Good for building a team, deepening the brand and making the structure behind the warmth.</p>
+        <div class="foot">Fire Goat<i>consolidation</i></div>
+      </article>
+      <article class="tarot">
+        <div class="tab">XXVIII</div>
+        <div class="yr">2028</div><div class="yg">戊申</div>
+        <svg class="emb"><use href="#e-earth"/></svg>
+        <p>Creative expression runs high and Metal returns. Ideas and opportunities multiply, and so do demands. A year to pace herself, protect her margins and say yes only to what feeds the flame.</p>
+        <div class="foot">Earth Monkey<i>output</i></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="rituals">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">补运</span><h2>Tending the Flame</h2><p>Traditional remedies bring in what a chart is missing. For Ivana that means Wood first and Fire second: growth, warmth and morning light.</p></div>
+    <div class="rituals">
+      <div class="pill rit">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><g class="ln"><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="38" stroke-dasharray="1 4"/><path d="M50 20a30 30 0 0 1 0 60z"/></g><use href="#star4" x="80" y="8" width="12" height="12"/></svg>
+        <h3>Colours</h3>
+        <div class="sw"><span style="background:#3f6e52"></span><span style="background:#8db08a"></span><span style="background:#c9662f"></span><span style="background:#8e2f2a"></span></div>
+        <p>Leaf greens, moss and jade with warm amber, persimmon and wine. Lighten the all-black and heavy silver.</p>
+      </div>
+      <div class="pill rit">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><g class="ln"><circle cx="50" cy="50" r="32"/><path d="M50 26l6 24-6 24-6-24z"/><path d="M50 8v8M50 84v8M8 50h8M84 50h8"/></g>
+          <text x="50" y="6" text-anchor="middle" font-family="Jost" font-size="7" fill="#7d6747">N</text><text x="97" y="53" font-family="Jost" font-size="8" fill="#f0d9a6">E</text><text x="50" y="100" text-anchor="middle" font-family="Jost" font-size="8" fill="#f0d9a6">S</text><text x="0" y="53" font-family="Jost" font-size="7" fill="#7d6747">W</text></svg>
+        <h3>Directions</h3>
+        <p>East for growth, South for recognition. A desk facing east; a café window toward the morning sun.</p>
+      </div>
+      <div class="pill rit">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><g class="ln"><circle cx="50" cy="58" r="14"/><path d="M50 30v8M50 78v8M22 58h8M70 58h8M30 38l6 6M70 38l-6 6"/><path d="M10 72h80" /></g><use href="#star4" x="76" y="6" width="12" height="12"/></svg>
+        <h3>Season &amp; hour</h3>
+        <p>Spring and early summer are her strongest seasons. Early mornings carry Wood; late morning to midday carries Fire.</p>
+      </div>
+      <div class="pill rit">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#e-wood" x="10" y="6" width="80" height="80"/></svg>
+        <h3>Keep near</h3>
+        <p>Living plants, wood grain, books, candlelight and the roaster's warmth. Teachers, mentors and unhurried time are Wood too.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="abundance">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">财运</span><h2>The Abundance Reading</h2><p>How wealth moves through her chart, where it comes from and what the next ten years hold.</p></div>
+
+    <div class="ab-intro">
+      <p class="lede">In Bazi, wealth is whatever the Day Master can shape and hold. For a fire, that is Metal, and Ivana's chart is full of it: gold in the year, gold in her own seat, gold crowning the hour.</p>
+      <div>
+        <p>Classical readers call this pattern <em>abundant wealth with a delicate self</em> <span class="han">财多身弱</span>. It describes someone surrounded by value from the very beginning, who sees opportunity everywhere and attracts it easily, and whose real work is building the strength to hold what flows toward her. Money is rarely the question in a chart like this; capacity is.</p>
+        <p>This is why her luck pillars matter so much. Every Wood and Fire decade strengthens the flame, and each time the flame grows, more of the surrounding gold becomes hers to keep. She is now in the first of two such decades back to back, which makes the coming years the most abundant passage her chart has yet seen.</p>
+      </div>
+    </div>
+
+    <div class="channels">
+      <article class="pill tal">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><g class="ln"><path d="M34 54h52l-6 44H40z"/><path d="M86 62c12 0 12 20 0 20"/><path d="M50 18c6 8-6 14 0 26M62 14c6 8-6 14 0 26M74 18c6 8-6 14 0 26"/><path d="M28 104h64"/></g><use href="#star4" x="92" y="20" width="12" height="12"/></svg>
+        <div class="k">偏财</div>
+        <h3>The hearth</h3>
+        <p>Her first river of wealth is hospitality itself. Indirect Wealth is money that moves through trade, circulation and many hands, and a flame that gathers people is built to earn this way. Her café, her events and her roasting are her most natural engines.</p>
+        <div class="src">Two Indirect Wealth stars</div>
+      </article>
+      <article class="pill tal">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><g class="ln"><path d="M60 14L80 44 60 104 40 44z"/><path d="M40 44h40M60 14l-8 30 8 60 8-60z"/><circle cx="60" cy="60" r="44" stroke-dasharray="1 4"/></g><use href="#star4" x="86" y="16" width="12" height="12"/></svg>
+        <div class="k">钗钏金 · 伤官</div>
+        <h3>The fine object</h3>
+        <p>Her hour carries Hairpin Gold, the metal of jewellery and treasured small things, alongside her star of taste. Her highest margins lie in the precious and the particular: rare lots, limited editions, objects and collaborations that people keep.</p>
+        <div class="src">Hour pillar 庚戌</div>
+      </article>
+      <article class="pill tal">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><g class="ln"><path d="M24 70c10-14 22-14 36 0 14-14 26-14 36 0"/><path d="M60 70v38"/><circle cx="60" cy="36" r="14"/><path d="M60 8v8M36 16l5 6M84 16l-5 6"/></g><use href="#star4" x="18" y="34" width="10" height="10"/><use href="#star4" x="92" y="34" width="10" height="10"/></svg>
+        <div class="k">天乙贵人</div>
+        <h3>The patron</h3>
+        <p>Three Nobleman stars mean that a meaningful share of her fortune arrives through others: investors who believe in her taste, institutions that commission her eye, partners who open new markets. Her network is a real asset on her balance sheet.</p>
+        <div class="src">Branches 酉 亥 酉</div>
+      </article>
+    </div>
+
+    <div class="sec-head" style="margin-bottom:24px"><span class="han">十年财运</span><h2 style="font-size:clamp(30px,4vw,42px)">The coming decade, year by year</h2></div>
+    <div class="ledger"><div class="lrow"><div class="y">2026</div><div class="g">丙午</div><div class="moons" role="img" aria-label="Abundance 4 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div><div class="t"><b>Fire Horse · strength to hold</b><p>The year her own fire is rooted. A Day Master who is usually outweighed by her wealth suddenly has the strength to carry it, so money that was always circling her begins to land. The sun beside the candle also brings partners and rivals; abundance arrives through people, and the wise move is clear terms in every shared venture.</p></div></div><div class="lrow"><div class="y">2027</div><div class="g">丁未</div><div class="moons" role="img" aria-label="Abundance 4 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div><div class="t"><b>Fire Goat · building the vessel</b><p>A kindred flame on warm earth, and the Goat joins her Pig in a half Wood alliance. Pressure turns into support. Less a windfall year than a year of building the vessel that will hold later windfalls: systems, team, pricing, the quiet architecture of a business that can grow without consuming its founder.</p></div></div><div class="lrow"><div class="y">2028</div><div class="g">戊申</div><div class="moons" role="img" aria-label="Abundance 3 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="t"><b>Earth Monkey · creation into revenue</b><p>The Hurting Officer, her star of taste, feeds straight into wealth. New products, collaborations and editions sell on the strength of her eye. Metal returns heavily, so this is a year of plenty that can also tire her; abundance here is earned in output and protected by rest.</p></div></div><div class="lrow"><div class="y">2029</div><div class="g">己酉</div><div class="moons" role="img" aria-label="Abundance 3 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="t"><b>Earth Rooster · opportunities everywhere</b><p>The Eating God brings ease and pleasure in the work while a third Rooster joins her two. Opportunities multiply faster than she can serve them. The abundance is real and so is the risk of scattering; the reading is to say yes to fewer, finer things.</p></div></div><div class="lrow"><div class="y">2030</div><div class="g">庚戌</div><div class="moons" role="img" aria-label="Abundance 3 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="t"><b>Metal Dog · the hour pillar returns</b><p>The year repeats her hour pillar exactly, the pillar of projects and legacy, so what she has been building comes back to meet her. Direct Wealth stands open in the sky: steady income, contracts, property and the long-term structures of money. A year to formalise, consolidate and own.</p></div></div><div class="lrow"><div class="y">2031</div><div class="g">辛亥</div><div class="moons" role="img" aria-label="Abundance 3 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="t"><b>Metal Pig · the patron returns</b><p>Indirect Wealth over a Pig carrying her Nobleman star and hidden Wood. Help arrives from above at the close of her brightest decade, often as a patron, investor or institution that recognises the culture she has made. Good for raising capital and for deals that carry prestige.</p></div></div><div class="lrow peak"><div class="y">2032</div><div class="g">壬子</div><div class="moons" role="img" aria-label="Abundance 4 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div><div class="t"><b>Water Rat · a binding alliance</b><p>Her new decade of 丁卯 begins, and the year stem 壬 embraces her 丁 in a combination that transforms into Wood. A partnership, a title or a union that genuinely feeds her. Recognition and reward arrive together, and an agreement made now can shape the next ten years.</p></div></div><div class="lrow peak"><div class="y">2033</div><div class="g">癸丑</div><div class="moons" role="img" aria-label="Abundance 4 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div><div class="t"><b>Water Ox · the treasury opens</b><p>The Ox is the storehouse of Metal, which for a Fire Day Master is her wealth vault <span class="han">财库</span>, absent from her birth chart until now. When a missing vault arrives, wealth that has been earned becomes wealth that is kept: savings, assets, ownership and the first sense of lasting security.</p></div></div><div class="lrow peak"><div class="y">2034</div><div class="g">甲寅</div><div class="moons" role="img" aria-label="Abundance 5 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div><div class="t"><b>Wood Tiger · pure nourishment</b><p>Direct Resource over the Tiger of spring, embracing her Pig once more. This is the purest support her chart can receive, and for a flame that has carried so much metal it is the year the scales finally tip. Expansion feels effortless, backers appear, and abundance comes with peace rather than strain.</p></div></div><div class="lrow"><div class="y">2035</div><div class="g">乙卯</div><div class="moons" role="img" aria-label="Abundance 4 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div><div class="t"><b>Wood Rabbit · growth in motion</b><p>Wood upon Wood in a Wood decade, rich with nourishment, while the Rabbit clashes with her Roosters. Abundance arrives with movement: a new site, a new city, a sale or reinvention of something long held. Change here is the shape that growth takes.</p></div></div></div>
+    <div class="ledger-key"><span>Moons · strength of abundance for the year</span></div>
+
+    <div class="ab-keys">
+      <article class="tarot">
+        <div class="tab">✦</div>
+        <h3>How she grows it</h3>
+        <ul>
+          <li>Pursue the premium over the plentiful. Her chart rewards depth and rarity more than volume.</li>
+          <li>Let mentors, advisers and backers carry some of the weight. Support is the Wood that turns pressure into profit.</li>
+          <li>Build in spring and launch toward summer, when her elements are in season.</li>
+          <li>Move from venture to vessel between 2030 and 2033, turning income into equity, property and ownership.</li>
+        </ul>
+        <div class="foot">Favourable · Wood &amp; Fire</div>
+      </article>
+      <article class="tarot">
+        <div class="tab">✦</div>
+        <h3>How she protects it</h3>
+        <ul>
+          <li>Write clear terms into every partnership, especially during the sun decade, when peers can share the flame as easily as feed it.</li>
+          <li>Keep a reserve that stays untouched. Earth, the neutral element in her chart, is the stillness that stores.</li>
+          <li>Beware of saying yes to every opportunity in heavy Metal years like 2028 and 2029. Abundance can exhaust a candle.</li>
+          <li>Rest is part of the strategy. A strong flame keeps more of the gold around it.</li>
+        </ul>
+        <div class="foot">Caution · excess Water &amp; Metal</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="month2027">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">丁未年 · 月运</span><h2>2027, Month by Month</h2><p>A field guide to the Fire Goat year, one card for each solar month. The moons show how strongly each month favours her; the foot of each card names what it is best used for.</p></div>
+    <div class="months"><article class="tarot"><div class="tab">I</div><div class="mhead"><span class="mname">January</span><span class="mgz">辛丑</span></div><div class="mdates">Jan 5 – Feb 3</div><div class="moons" role="img" aria-label="3 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="mtheme">The quiet treasury</div><p>The last month of the Fire Horse year brings the Ox, the storehouse of her wealth. What was earned in 2026 can be counted, invoiced and set aside. The month runs cold and heavy with Metal, so let it be for closing the books and resting before the turn.</p><div class="foot">Accounts · planning · rest</div></article><article class="tarot peak"><div class="tab">II</div><div class="mhead"><span class="mname">February</span><span class="mgz">壬寅</span></div><div class="mdates">Feb 4 – Mar 5</div><div class="moons" role="img" aria-label="5 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div><div class="mtheme">The double spring</div><p>The strongest door of the year. 壬 embraces her 丁 and the Tiger embraces her Pig, and both unions turn into Wood, so pressure becomes fuel twice over. Whatever she opens, signs or announces now has the whole year behind it.</p><div class="foot">Launches · signing · beginnings</div></article><article class="tarot"><div class="tab">III</div><div class="mhead"><span class="mname">March</span><span class="mgz">癸卯</span></div><div class="mdates">Mar 6 – Apr 4</div><div class="moons" role="img" aria-label="4 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div><div class="mtheme">Pressure into growth</div><p>Seven Killings arrives on a Rabbit of pure Wood, the very formula her chart is learning: demand transformed by support. Expect a hard push that pays. The Rabbit shakes both Roosters, so spaces, menus and routines want rearranging.</p><div class="foot">Bold asks · renovation</div></article><article class="tarot"><div class="tab">IV</div><div class="mhead"><span class="mname">April</span><span class="mgz">甲辰</span></div><div class="mdates">Apr 5 – May 5</div><div class="moons" role="img" aria-label="3 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="mtheme">The mentor's month</div><p>Direct Resource stands open and brings teachers, advisers and wise counsel. The Dragon clashes with her Dog, the branch of projects, so a plan may need rebuilding or someone on the team may move on. Lean on guidance and let the structure adjust.</p><div class="foot">Advice · training · learning</div></article><article class="tarot"><div class="tab">V</div><div class="mhead"><span class="mname">May</span><span class="mgz">乙巳</span></div><div class="mdates">May 6 – Jun 5</div><div class="moons" role="img" aria-label="4 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div><div class="mtheme">Rising visibility</div><p>Wood and Fire together warm the flame. The Snake clashes with her Pig in the palace of career, so her professional world moves: a new role, a new collaborator, an offer from somewhere unexpected. A month to say yes to being seen.</p><div class="foot">Press · partnerships · events</div></article><article class="tarot peak"><div class="tab">VI</div><div class="mhead"><span class="mname">June</span><span class="mgz">丙午</span></div><div class="mdates">Jun 6 – Jul 6</div><div class="moons" role="img" aria-label="5 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div><div class="mtheme">The summer blaze</div><p>The Fire Horse returns inside the Fire Goat year, the hottest stretch of the calendar and her own root. Charisma is high, rooms fill easily and new people arrive. Ideal for a summer launch, a party or a pop-up, with shared money clearly written.</p><div class="foot">Hosting · summer launches · collaborations</div></article><article class="tarot"><div class="tab">VII</div><div class="mhead"><span class="mname">July</span><span class="mgz">丁未</span></div><div class="mdates">Jul 7 – Aug 7</div><div class="moons" role="img" aria-label="4 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div><div class="mtheme">Kindred flames</div><p>The month mirrors the year, flame beside flame on warm earth, and the Goat draws her Pig toward Wood. Excellent for building a team, finding collaborators who share her standards and deepening the story of the brand.</p><div class="foot">Hiring · team · brand</div></article><article class="tarot"><div class="tab">VIII</div><div class="mhead"><span class="mname">August</span><span class="mgz">戊申</span></div><div class="mdates">Aug 8 – Sep 7</div><div class="moons" role="img" aria-label="2 of 5"><i class="f"></i><i class="f"></i><i></i><i></i><i></i></div><div class="mtheme">Output and fatigue</div><p>Earth and Metal return in force. The Hurting Officer sharpens her taste and her tongue alike: ideas flow, critique comes easily and words can land harder than intended. Create freely, read every contract twice and guard her energy.</p><div class="foot">Product work · careful contracts</div></article><article class="tarot"><div class="tab">IX</div><div class="mhead"><span class="mname">September</span><span class="mgz">己酉</span></div><div class="mdates">Sep 8 – Oct 7</div><div class="moons" role="img" aria-label="2 of 5"><i class="f"></i><i class="f"></i><i></i><i></i><i></i></div><div class="mtheme">Too much of a good thing</div><p>A third Rooster joins her two, the quiet self-punishment of the perfectionist. Orders and opportunities are plentiful while the flame runs thin. Refine rather than expand, finish rather than start and put real rest in the calendar.</p><div class="foot">Refinement · quality · rest</div></article><article class="tarot"><div class="tab">X</div><div class="mhead"><span class="mname">October</span><span class="mgz">庚戌</span></div><div class="mdates">Oct 8 – Nov 6</div><div class="moons" role="img" aria-label="3 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="mtheme">Structure and income</div><p>Her hour pillar repeats and Direct Wealth brings steady, contractual money. The Dog shelters a small flame of her own, giving her firmer footing than the two months before. Good for pricing, leases and long-range financial decisions.</p><div class="foot">Pricing · leases · financial plans</div></article><article class="tarot"><div class="tab">XI</div><div class="mhead"><span class="mname">November</span><span class="mgz">辛亥</span></div><div class="mdates">Nov 7 – Dec 6</div><div class="moons" role="img" aria-label="4 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div><div class="mtheme">The birthday patron</div><p>Her birth month returns with the Pig, carrier of her Nobleman star and its hidden Wood. Patrons, investors and generous strangers gather around her birthday. A beautiful month for asking, for introductions and for being celebrated.</p><div class="foot">Fundraising · introductions · celebration</div></article><article class="tarot"><div class="tab">XII</div><div class="mhead"><span class="mname">December</span><span class="mgz">壬子</span></div><div class="mdates">Dec 7 – Jan 5</div><div class="moons" role="img" aria-label="3 of 5"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="mtheme">A binding promise</div><p>壬 embraces her 丁 once more, a month for commitments that genuinely support her. The Rat brings deep winter water, so warmth matters: candlelight, close friends and the unhurried planning of what comes next.</p><div class="foot">Agreements · reflection · 2028 plans</div></article></div>
+    <p class="small" style="text-align:center;margin-top:22px">Bazi months begin at the solar terms, so each runs from early in one calendar month to early in the next. Dates may shift by a day.</p>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="natal">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">星盘</span><h2>The Western Sky</h2><p>The same hour read through Western astrology: the positions of the planets over Zrenjanin at 7:10 pm on 12 November 1993.</p></div>
+    <div class="natal-top">
+      <svg id="wheel" viewBox="-260 -260 520 520" role="img" aria-label="Ivana's natal chart wheel: six planets gathered in Scorpio, Mars in Sagittarius, Uranus and Neptune in Capricorn, Saturn in Aquarius, Cancer rising"></svg>
+      <div class="big3">
+        <article class="tarot"><div class="b3h"><span class="gl">☉︎</span><h3>Sun in Scorpio</h3><span class="deg">20°</span></div><p>Depth, intensity and the instinct to see what lies beneath. A Scorpio sun does not skim; she commits, investigates and transforms whatever she touches.</p></article>
+        <article class="tarot"><div class="b3h"><span class="gl">☽︎</span><h3>Moon in Scorpio</h3><span class="deg">4°</span></div><p>Feeling runs deep, private and loyal. She remembers everything and trusts slowly, and once she trusts the bond is for life. Born the night before a new moon, she carries its most inward phase.</p></article>
+        <article class="tarot"><div class="b3h"><span class="gl">↑</span><h3>Cancer Rising</h3><span class="deg">9°</span></div><p>The world meets her as a host: protective, nurturing and instinctively attuned to the comfort of others. Her chart is ruled by the Moon, so care is the face she shows the world.</p></article>
+      </div>
+    </div>
+
+    <div class="talismans">
+      <article class="pill tal">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><g class="ln"><circle cx="60" cy="60" r="40" stroke-dasharray="1 4"/><circle cx="60" cy="60" r="10"/></g><g class="lnf"><circle cx="60" cy="20" r="4"/><circle cx="88" cy="32" r="3"/><circle cx="100" cy="60" r="3.5"/><circle cx="32" cy="32" r="3"/><circle cx="20" cy="60" r="2.5"/><circle cx="88" cy="88" r="2.5"/></g></svg>
+        <div class="k">5th house</div>
+        <h3>Six planets in Scorpio</h3>
+        <p>Sun, Moon, Mercury, Venus, Jupiter and Pluto gathered in a single sign, an extraordinary concentration. It falls in her house of creativity, pleasure and play, which makes the art of delight her life's work: the gathering, the taste, the experience made with total intensity.</p>
+        <div class="src">Stellium · Scorpio · 0° to 25°</div>
+      </article>
+      <article class="pill tal">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><g class="ln"><path d="M24 96L96 24M96 24H70M96 24v26M40 64l16 16"/><circle cx="60" cy="60" r="44" stroke-dasharray="1 4"/></g><use href="#star4" x="18" y="16" width="12" height="12"/></svg>
+        <div class="k">6th house</div>
+        <h3>Mars in Sagittarius</h3>
+        <p>Her drive lives in the house of daily work and takes the shape of the archer, the sign of journeys and far horizons. Sourcing from distant origins, travelling for the work and the restless search for the very best are part of how she moves through her days.</p>
+        <div class="src">Mars · 2° Sagittarius</div>
+      </article>
+      <article class="pill tal">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><g class="ln"><circle cx="48" cy="60" r="24"/><circle cx="72" cy="60" r="24"/><path d="M60 14v18M60 88v18"/></g><use href="#star4" x="53" y="53" width="14" height="14"/></svg>
+        <div class="k">7th house</div>
+        <h3>Uranus meets Neptune</h3>
+        <p>She was born in the year of the rare Uranus and Neptune conjunction, the first in 171 years, and it sits in her house of partnership. Her most important collaborators bring vision and disruption, and the right partnership can change the whole shape of her life.</p>
+        <div class="src">19° Capricorn</div>
+      </article>
+    </div>
+
+    <div class="long">
+      <article class="tarot">
+        <div class="tab">✦</div>
+        <h3>The threshold birth</h3>
+        <div class="k">Balsamic moon · Midheaven in Pisces · Saturn in Aquarius</div>
+        <p>Ivana arrived on the eve of the new moon, a day before the solar eclipse of 13 November 1993, which fell in her own sign. A birth on the threshold of a new cycle belongs to people who close old chapters and seed new ones.</p>
+        <p>Her Midheaven in Pisces builds a reputation on atmosphere, imagination and compassion, while Saturn at home in Aquarius governs her eighth house of shared resources: capital and partnership come to her through patience and good structure.</p>
+        <div class="foot">Born 13 hours before the new moon</div>
+      </article>
+      <article class="tarot">
+        <div class="tab">☯</div>
+        <h3>Where East meets West</h3>
+        <div class="k">八字 · 星盘</div>
+        <p>Both traditions see the same woman. Bazi finds a candle surrounded by winter water; the Western sky finds six planets in a water sign and a Water-dominant chart. Both describe depth, intensity and a warmth carried inside the cold.</p>
+        <p>Bazi's Seven Killings and Scorpio's fixed endurance both speak to her grace under pressure. The Literary Star finds its echo in a stellium devoted to taste and pleasure, and the Nobleman's patrons reappear in Saturn's slow, reliable capital.</p>
+        <div class="foot">Water 6 of 10 · Fixed 7 of 10</div>
+      </article>
+    </div>
+
+    <div class="ptable-box"><table class="ptable">
+      <thead><tr><th></th><th>Point</th><th>Sign</th><th>Degree</th><th>House</th><th>Speaks to</th></tr></thead>
+      <tbody><tr><td class="g">☉︎</td><td>Sun</td><td>Scorpio</td><td>20°24′</td><td>5th</td><td class="m">the self</td></tr><tr><td class="g">☽︎</td><td>Moon</td><td>Scorpio</td><td>4°12′</td><td>5th</td><td class="m">the heart</td></tr><tr><td class="g">☿︎</td><td>Mercury</td><td>Scorpio</td><td>7°06′</td><td>5th</td><td class="m">the mind</td></tr><tr><td class="g">♀︎</td><td>Venus</td><td>Scorpio</td><td>4°36′</td><td>5th</td><td class="m">love and taste</td></tr><tr><td class="g">♂︎</td><td>Mars</td><td>Sagittarius</td><td>2°30′</td><td>6th</td><td class="m">drive and work</td></tr><tr><td class="g">♃︎</td><td>Jupiter</td><td>Scorpio</td><td>0°30′</td><td>5th</td><td class="m">growth and luck</td></tr><tr><td class="g">♄︎</td><td>Saturn</td><td>Aquarius</td><td>23°48′</td><td>8th</td><td class="m">structure and time</td></tr><tr><td class="g">♅︎</td><td>Uranus</td><td>Capricorn</td><td>19°06′</td><td>7th</td><td class="m">change</td></tr><tr><td class="g">♆︎</td><td>Neptune</td><td>Capricorn</td><td>18°54′</td><td>7th</td><td class="m">vision</td></tr><tr><td class="g">♇︎</td><td>Pluto</td><td>Scorpio</td><td>25°12′</td><td>5th</td><td class="m">transformation</td></tr><tr><td class="g">↑</td><td>Ascendant</td><td>Cancer</td><td>9°30′</td><td>1st</td><td class="m">how the world meets her</td></tr><tr><td class="g">MC</td><td>Midheaven</td><td>Pisces</td><td>13°30′</td><td>—</td><td class="m">public calling</td></tr></tbody>
+    </table></div>
+    <p class="small">Tropical zodiac, whole-sign houses from a Cancer Ascendant; Midheaven by quadrant calculation.</p>
+  </div>
+</section>
+
+<svg class="divider" viewBox="0 0 220 24" aria-hidden="true"><g class="ln"><path d="M0 12h88M132 12h88"/><circle cx="110" cy="12" r="8"/></g><circle cx="110" cy="12" r="2.5" class="lnf"/><circle cx="96" cy="12" r="1.3" class="lnf"/><circle cx="124" cy="12" r="1.3" class="lnf"/></svg>
+
+<section id="friendship">
+  <div class="wrap">
+    <div class="sec-head"><span class="han">知己</span><h2>Ivana &amp; Jane</h2><p>A reading of the friendship, the candle and the blade, written for the two of them.</p></div>
+    <div class="duo">
+      <div class="who">
+        <div class="nm">Ivana</div>
+        <div class="dm">丁</div>
+        <span class="cap">Yin Fire · the candle</span>
+        <div class="row"><span>庚戌<small>Hour</small></span><span>丁酉<small>Day</small></span><span>癸亥<small>Month</small></span><span>癸酉<small>Year</small></span></div>
+      </div>
+      <svg class="forge" viewBox="0 0 200 220" role="img" aria-label="A candle flame tempering a blade">
+        <g class="ln">
+          <path d="M100 6v14" stroke-dasharray="2 4"/>
+          <path d="M100 30c14 22 22 38 20 52-2 14-10 20-20 20s-18-6-20-20c-2-14 6-30 20-52z"/>
+          <path d="M100 66c6 10 9 16 8 22s-4 9-8 9-7-3-8-9 2-12 8-22z"/>
+          <path d="M100 112v8"/>
+          <path d="M40 150L160 128l6 6-120 24z"/><path d="M46 158l-14 10M40 150l-14 4"/>
+          <path d="M60 182c13-8 27 8 40 0s27 8 40 0"/>
+          <circle cx="100" cy="74" r="58" stroke-dasharray="1 4"/>
+        </g>
+        <use href="#star4" x="24" y="40" width="14" height="14"/><use href="#star4" x="162" y="56" width="11" height="11"/>
+        <text x="100" y="212" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="15" letter-spacing="4" fill="#d8b77c">丁火炼庚金</text>
+      </svg>
+      <div class="who">
+        <div class="nm">Jane</div>
+        <div class="dm">庚</div>
+        <span class="cap">Yang Metal · the blade</span>
+        <div class="row"><span>甲申<small>Hour</small></span><span>庚申<small>Day</small></span><span>辛丑<small>Month</small></span><span>丙寅<small>Year</small></span></div>
+      </div>
+    </div>
+
+    <div class="fs-grid">
+      <article class="tarot">
+        <div class="tab">✦</div>
+        <h3>The forge</h3>
+        <div class="k">丁火炼庚金</div>
+        <p>Jane's Day Master is 庚, Yang Metal: unworked ore, the blade before it is forged. Ivana's is 丁, the candle. The classics celebrate this as one of the finest pairings there is: the small, steady fire that tempers raw metal into something fine, where a bonfire would only melt it.</p>
+        <p>Jane's chart is strong and wintry, and the element it needs above all is Fire, so Ivana is exactly what it asks for. To Ivana's chart, Jane is Direct Wealth, the precious material her flame was made to work and treasure. Each is the other's purpose.</p>
+        <div class="foot">Officer &amp; Wealth · 正官 · 正财</div>
+      </article>
+      <article class="tarot">
+        <div class="tab">✦</div>
+        <h3>What Jane carries for Ivana</h3>
+        <div class="k">丙寅 · 甲</div>
+        <p>Jane's year pillar, 丙寅, the Fire Tiger, is the very pillar of the decade Ivana is living through now, the brightest stretch of her chart. Jane carries the sun beside the candle, which Ivana's chart reads as a sister star, and the spring Tiger whose embrace draws the hidden Wood out of Ivana's Pig.</p>
+        <p>Jane's hour stem 甲 is Ivana's Direct Resource, the mentor's star. So while Ivana brings warmth, Jane brings the Wood and Fire Ivana is missing: counsel, encouragement and the feeling of not keeping the flame lit alone.</p>
+        <div class="foot">Sister star · Resource · 寅亥合</div>
+      </article>
+      <article class="tarot">
+        <div class="tab">✦</div>
+        <h3>A shared autumn</h3>
+        <div class="k">申酉戌 · 申亥害</div>
+        <p>Jane's Monkey and Ivana's Rooster and Dog complete the western assembly of Metal, a full autumn of exacting taste. Together they form a formidable court of standards. Neither chart wants more Metal, so the friendship flourishes when it leans toward warmth: candlelight rather than critique, mornings and gardens rather than verdicts.</p>
+        <p>Jane's Monkey quietly harms Ivana's Pig, a small sign that a blade's directness can land harder than it means on a flame that burns inward. Ivana also carries Jane's Literary Star, so Jane's best thinking sharpens in conversation with her.</p>
+        <div class="foot">Directional Metal · Literary Star 文昌</div>
+      </article>
+      <article class="tarot">
+        <div class="tab">✦</div>
+        <h3>Two hosts under one sky</h3>
+        <div class="k">Western synastry</div>
+        <p>Both are Cancer rising, two hosts who recognise each other on sight. Jane's Capricorn Sun falls in Ivana's house of partnership, within two degrees of her rare Uranus and Neptune, so Jane arrived in her life as a bringer of vision and change.</p>
+        <p>Jane's Jupiter forms an almost exact trine to Ivana's Sun, the classic signature of someone who expands and blesses. Jane's Venus rests on Ivana's Mars and their two Mars form an exact trine: a shared appetite for adventure and energy perfectly matched.</p>
+        <div class="foot">Jupiter △ Sun · Mars △ Mars · ASC ☌ ASC</div>
+      </article>
+      <article class="tarot wide">
+        <div class="tab">♡</div>
+        <h3>Two winters, one hearth</h3>
+        <div class="k">冬生</div>
+        <p>Both were born in the cold months, Ivana in the Pig and Jane in the Ox, and both charts look first to Fire for warmth. In the language of the five elements this is a friendship between two winters that have learned to be each other's hearth: one gives the flame its purpose, the other gives the flame its fuel, and between them something is always being made.</p>
+        <div class="foot">For Ivana, with love from Jane</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<div class="verse">
+  <div class="wrap">
+    <svg width="90" height="40" viewBox="0 0 90 40" aria-hidden="true"><g class="ln"><path d="M52 6a16 16 0 1 0 0 28 13 13 0 1 1 0-28z"/></g><use href="#star4" x="62" y="4" width="10" height="10"/></svg>
+    <div class="zh">初年运道未曾亨<br>一身事业晚年成</div>
+    <div class="en">The early road was not always smooth;<br>the work of a life comes into its fullness later.</div>
+    <div class="cap" style="margin-top:18px;color:var(--gold-dim)">Bone-weight verse · 4 liang 8 qian</div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Pillars calculated for 12 November 1993, 7:10 pm CET in Zrenjanin (45.38°N, 20.39°E), corrected to true solar time. Luck pillars run forward from about age eight; exact start ages vary a little between schools.</p>
+    <p>Bazi is a traditional Chinese art of reflection. This reading is offered as a gift and a mirror.</p>
+  </div>
+</footer>
+</div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+
+  /* rays around flames */
+  function rays(g,cx,cy,r1,r2,n,skip){
+    for(var i=0;i<n;i++){var a=i/n*Math.PI*2;if(skip&&skip(a))continue;
+      var long=i%2===0;var rr=long?r2:r2-(r2-r1)*.5;
+      el('line',{x1:cx+Math.cos(a)*r1,y1:cy+Math.sin(a)*r1,x2:cx+Math.cos(a)*rr,y2:cy+Math.sin(a)*rr,'stroke-dasharray':long?'':'1.5 3'},g);}
+  }
+  rays(document.getElementById('dmRays'),100,100,62,86,36,function(a){return a>0.6&&a<2.55});
+
+  /* crescent hatching */
+  var hg=document.getElementById('crescentHatch');
+  var defs=el('defs',{},hg);var cp=el('clipPath',{id:'cclip'},defs);
+  el('path',{d:'M-30-92A100 100 0 1 0 98 30 84 84 0 1 1 -30 -92z'},cp);
+  var lines=el('g',{'clip-path':'url(#cclip)',stroke:'#d8b77c','stroke-width':'.7',opacity:'.75'},hg);
+  for(var i=0;i<90;i++){var a=i/90*Math.PI*2;el('line',{x1:20,y1:20,x2:20+Math.cos(a)*140,y2:20+Math.sin(a)*140},lines)}
+  rays(document.getElementById('flameRays'),20,10,0,0,0);
+
+  /* element orbit */
+  var o=document.getElementById('orbit');
+  var E=[{n:'Wood',h:'木',p:6,f:1},{n:'Fire',h:'火',p:5,f:1},{n:'Earth',h:'土',p:1},{n:'Metal',h:'金',p:26},{n:'Water',h:'水',p:62}];
+  var R=150;
+  el('circle',{cx:0,cy:0,r:R,class:'ln','stroke-dasharray':'1 5'},o);
+  el('circle',{cx:0,cy:0,r:R+40,class:'ln',opacity:'.35'},o);
+  for(var t=0;t<72;t++){var a=t/72*Math.PI*2;el('line',{x1:Math.cos(a)*(R+40),y1:Math.sin(a)*(R+40),x2:Math.cos(a)*(R+(t%6===0?50:44)),y2:Math.sin(a)*(R+(t%6===0?50:44)),class:'ln',opacity:'.5'},o)}
+  // controlling star (dim)
+  var pts=E.map(function(e,i){var a=-Math.PI/2+i*2*Math.PI/5;return[Math.cos(a)*R,Math.sin(a)*R]});
+  var star='';[0,2,4,1,3,0].forEach(function(k,j){star+=(j?'L':'M')+pts[k][0].toFixed(1)+' '+pts[k][1].toFixed(1)});
+  el('path',{d:star,class:'ln',opacity:'.22'},o);
+  // centre flame
+  el('use',{href:'#e-fire',x:-38,y:-38,width:76,height:76},o);
+  E.forEach(function(e,i){
+    var x=pts[i][0],y=pts[i][1];var r=14+Math.sqrt(e.p)*6.2;
+    el('circle',{cx:x,cy:y,r:r+8,fill:'#09090a',stroke:'none'},o);
+    el('circle',{cx:x,cy:y,r:r,fill:e.p>20?'#d8b77c':'#09090a',stroke:'#d8b77c','stroke-width':1.2},o);
+    if(e.f){el('circle',{cx:x,cy:y,r:r+6,class:'ln','stroke-dasharray':'1 3'},o);}
+    var tx=el('text',{x:x,y:y+7,'text-anchor':'middle','font-family':'Noto Serif SC, serif','font-weight':600,'font-size':r>30?22:16,fill:e.p>20?'#09090a':'#f0d9a6'},o);tx.textContent=e.h;
+    var ly=y+(y<-100?-r-14:r+22);
+    var lb=el('text',{x:x,y:ly,'text-anchor':'middle','font-family':'Jost, sans-serif','font-size':11,'letter-spacing':'3',fill:'#d8b77c'},o);lb.textContent=e.n.toUpperCase()+'  '+e.p+'%';
+    if(e.f){var fv=el('text',{x:x,y:ly+(y<-100?-14:16),'text-anchor':'middle','font-family':'Cormorant Garamond, serif','font-style':'italic','font-size':15,fill:'#f0d9a6'},o);fv.textContent='favourable';}
+  });
+
+  /* luck arc */
+  var s=document.getElementById('arc');
+  var L=[{a:8,y:'2002–11',s:'甲',b:'子',t:'Learning in deep water'},{a:18,y:'2012–21',s:'乙',b:'丑',t:'Apprenticeship, slow ground'},{a:28,y:'2022–31',s:'丙',b:'寅',t:'Sunrise in spring wood',now:1},{a:38,y:'2032–41',s:'丁',b:'卯',t:'Her own flame, fed'},{a:48,y:'2042–51',s:'戊',b:'辰',t:'Expression and harvest'},{a:58,y:'2052–61',s:'己',b:'巳',t:'A rooted generous fire'}];
+  var cx=500,cy=620,AR=430,A0=205*Math.PI/180,A1=335*Math.PI/180;
+  el('path',{d:'M'+(cx+Math.cos(A0-.12)*AR)+' '+(cy+Math.sin(A0-.12)*AR)+'A'+AR+' '+AR+' 0 0 1 '+(cx+Math.cos(A1+.12)*AR)+' '+(cy+Math.sin(A1+.12)*AR),class:'ln','stroke-dasharray':'1 6',opacity:'.6'},s);
+  L.forEach(function(l,i){
+    var ang=A0+i/(L.length-1)*(A1-A0);var x=cx+Math.cos(ang)*AR,y=cy+Math.sin(ang)*AR;
+    var r=l.now?50:42;
+    if(l.now){el('circle',{cx:x,cy:y,r:r+10,class:'ln','stroke-dasharray':'1 3'},s);}
+    el('circle',{cx:x,cy:y,r:r,fill:l.now?'#d8b77c':'#0f0f10',stroke:'#d8b77c','stroke-width':1.2},s);
+    var g=el('text',{x:x,y:y+9,'text-anchor':'middle','font-family':'Noto Serif SC, serif','font-weight':900,'font-size':l.now?30:26,fill:l.now?'#09090a':'#f0d9a6'},s);g.textContent=l.s+l.b;
+    var oy=y-r-(l.now?40:26);
+    var ag=el('text',{x:x,y:oy,'text-anchor':'middle','font-family':'Cormorant Garamond, serif','font-size':l.now?34:28,fill:'#d8b77c'},s);ag.textContent=l.a;
+    var yr=el('text',{x:x,y:y+r+(l.now?34:26),'text-anchor':'middle','font-family':'Jost, sans-serif','font-size':11,'letter-spacing':'2.5',fill:'#a39479'},s);yr.textContent=l.y;
+    var tt=el('text',{x:x,y:y+r+(l.now?54:46),'text-anchor':'middle','font-family':'Cormorant Garamond, serif','font-style':'italic','font-size':16,fill:l.now?'#f0d9a6':'#ece2cc'},s);tt.textContent=l.t;
+    if(l.now){var nw=el('text',{x:x,y:oy-30,'text-anchor':'middle','font-family':'Jost, sans-serif','font-size':11,'letter-spacing':'4',fill:'#f0d9a6'},s);nw.textContent='NOW';}
+  });
+  el('text',{x:500,y:592,'text-anchor':'middle','font-family':'Jost, sans-serif','font-size':11,'letter-spacing':'4',fill:'#7d6747'},s).textContent='AGE · YEARS · CHARACTER OF THE DECADE';
+
+
+  /* natal wheel */
+  (function(){
+    var w=document.getElementById('wheel');if(!w)return;
+    var ASC=99.5,VS='\ufe0e';
+    function pt(L,r){var t=(180+(L-ASC))*Math.PI/180;return[Math.cos(t)*r,-Math.sin(t)*r]}
+    var gold='#d8b77c';
+    [236,200,150].forEach(function(r,i){el('circle',{cx:0,cy:0,r:r,class:'ln',opacity:i==2?.5:1},w)});
+    el('circle',{cx:0,cy:0,r:246,class:'ln','stroke-dasharray':'1 4',opacity:.6},w);
+    var SG=['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+    for(var k=0;k<12;k++){var a=pt(k*30,200),b=pt(k*30,236);el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],class:'ln'},w);
+      var c=pt(k*30,150),d=pt(k*30,200);el('line',{x1:c[0],y1:c[1],x2:d[0],y2:d[1],class:'ln',opacity:.35},w);
+      var g=pt(k*30+15,218);var t=el('text',{x:g[0],y:g[1]+6,'text-anchor':'middle','font-size':17,fill:k==7?'#f0d9a6':gold,'font-family':'DejaVu Sans, Segoe UI Symbol, Apple Symbols, serif'},w);t.textContent=SG[k]+VS;
+      var h=((k-3+12)%12)+1;var hp=pt(k*30+15,162);var ht=el('text',{x:hp[0],y:hp[1]+4,'text-anchor':'middle','font-size':10,fill:'#7d6747','font-family':'Jost, sans-serif'},w);ht.textContent=h;}
+    for(var dgr=0;dgr<360;dgr+=5){var a2=pt(dgr,200),b2=pt(dgr,dgr%10?204:208);el('line',{x1:a2[0],y1:a2[1],x2:b2[0],y2:b2[1],class:'ln',opacity:.6},w)}
+    // axes
+    var A=pt(ASC,250),D=pt(ASC+180,250);el('line',{x1:A[0],y1:A[1],x2:D[0],y2:D[1],class:'ln',opacity:.55},w);
+    var M=pt(343.5,250),I=pt(163.5,250);el('line',{x1:M[0],y1:M[1],x2:I[0],y2:I[1],class:'ln',opacity:.35,'stroke-dasharray':'2 4'},w);
+    var at=el('text',{x:A[0]+6,y:A[1]-6,'text-anchor':'start','font-size':10,'letter-spacing':2,fill:gold,'font-family':'Jost, sans-serif'},w);at.textContent='ASC';
+    var mt=pt(343.5,254);var mtt=el('text',{x:mt[0],y:mt[1]-4,'text-anchor':'middle','font-size':10,'letter-spacing':2,fill:gold,'font-family':'Jost, sans-serif'},w);mtt.textContent='MC';
+    var P=[['☉',230.4,1],['☽',214.2,1],['☿',217.1],['♀',214.6],['♂',242.5],['♃',210.5],['♄',323.8],['♅',289.1],['♆',288.9],['♇',235.2]];
+    P.sort(function(a,b){return a[1]-b[1]});
+    var last=-99;P.forEach(function(p){p.d=Math.max(p[1],last+8.5);last=p.d});
+    // aspects-ish: connect Sun to Saturn (square) and Sun-Neptune (sextile) faintly
+    P.forEach(function(p){
+      var tp=pt(p[1],150),tq=pt(p[1],145);el('circle',{cx:tp[0],cy:tp[1],r:2,fill:gold},w);
+      var lp=pt(p.d,124),l0=pt(p[1],148);el('line',{x1:l0[0],y1:l0[1],x2:lp[0],y2:lp[1],class:'ln',opacity:.4},w);
+      var gp=pt(p.d,112);var gt=el('text',{x:gp[0],y:gp[1]+7,'text-anchor':'middle','font-size':p[2]?21:18,fill:p[2]?'#f0d9a6':gold,'font-family':'DejaVu Sans, Segoe UI Symbol, Apple Symbols, serif'},w);gt.textContent=p[0]+VS;
+    });
+    el('circle',{cx:0,cy:0,r:62,class:'ln','stroke-dasharray':'1 4'},w);
+    el('use',{href:'#e-water',x:-34,y:-34,width:68,height:68},w);
+  })();
+  /* gold dust */
+  var c=document.getElementById('dust'),ctx=c.getContext('2d');
+  function dust(){
+    var d=Math.min(window.devicePixelRatio||1,2),W=window.innerWidth,H=window.innerHeight;
+    c.width=W*d;c.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+    var seed=7;function r(){seed=(seed*9301+49297)%233280;return seed/233280}
+    var n=Math.round(W*H/1400);
+    for(var i=0;i<n;i++){var x=r()*W,y=r()*H,s=r();
+      ctx.fillStyle='rgba(216,183,124,'+(0.08+s*0.35)+')';ctx.beginPath();ctx.arc(x,y,s<.93?.5+s*.6:1.3,0,6.283);ctx.fill();}
+    for(var j=0;j<Math.round(W*H/90000);j++){var X=r()*W,Y=r()*H,S=2+r()*3;
+      ctx.fillStyle='rgba(240,217,166,.55)';ctx.beginPath();ctx.moveTo(X,Y-S*2);ctx.quadraticCurveTo(X,Y,X+S*2,Y);ctx.quadraticCurveTo(X,Y,X,Y+S*2);ctx.quadraticCurveTo(X,Y,X-S*2,Y);ctx.quadraticCurveTo(X,Y,X,Y-S*2);ctx.fill();}
+  }
+  dust();window.addEventListener('resize',dust);
+})();
+</script>
+</body>
+</html>
