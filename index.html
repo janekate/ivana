@@ -276,6 +276,14 @@ a:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
 .fs-grid .wide{grid-column:1/-1}
 .fs-grid .wide p{max-width:820px;margin-left:auto;margin-right:auto}
 @media (max-width:960px){.duo{grid-template-columns:1fr}.forge{margin:0 auto;display:block}.fs-grid{grid-template-columns:1fr}}
+/* Decade Ahead: open layout, no card frames */
+#decade .tarot{background:none!important;border:0!important;box-shadow:none!important;border-radius:0}
+#decade .tarot::before,#decade .tarot::after,#decade .tarot .tab{display:none}
+#decade .tarot .foot{border-top:0;padding-top:6px}
+#decade .phases .tarot{padding-top:0}
+#decade .long .tarot{padding-top:8px}
+/* Abundance ledger: peak years marked by their moons alone */
+.lrow.peak{background:none!important;box-shadow:none!important}
 </style>
 </head>
 <body>
